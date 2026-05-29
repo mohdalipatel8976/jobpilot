@@ -1,0 +1,57 @@
+{
+  "name": "JobPilot - Telegram Alerts Dispatcher",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-alert",
+        "options": {}
+      },
+      "id": "a1a1a1a1-2222-3333-4444-555555555555",
+      "name": "Alert Trigger Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.body.telegram_chat_id }}",
+        "text": "=🔔 *JobPilot Notification* 🚀\n\n*{{ $json.body.title }}*\n\n{{ $json.body.message }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "b2b2b2b2-3333-4444-5555-666666666666",
+      "name": "Send Bot Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [480, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot-credentials",
+          "name": "Telegram Bot API Credentials"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Alert Trigger Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Bot Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateId": "jobpilot-telegram-alerts"
+  }
+}

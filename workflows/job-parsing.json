@@ -1,0 +1,104 @@
+{
+  "name": "JobPilot - Job Description AI Parser",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "parse-job",
+        "options": {}
+      },
+      "id": "c1a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/ai/parse-job",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer 535a48497f21e13c1cfe5e4585d17d3b"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $json.body.job_description_raw }}\"\n}",
+        "options": {}
+      },
+      "id": "d2b3c4d5-e6f7-8a9b-0c1d-2e3f4a5b6c7d",
+      "name": "AI Parse via Local LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://backend:8000/api/v1/applications/{{ $('Webhook Trigger').item.json.body.application_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Webhook Trigger').item.json.headers.authorization.split(' ')[1] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"company_name\": \"{{ $json.data.company_name }}\",\n  \"job_title\": \"{{ $json.data.job_title }}\",\n  \"location\": \"{{ $json.data.location }}\",\n  \"work_type\": \"{{ $json.data.work_type }}\",\n  \"salary_range\": \"{{ $json.data.salary_range }}\",\n  \"technologies\": {{ JSON.stringify($json.data.technologies) }},\n  \"job_description_parsed\": {{ JSON.stringify($json.data) }}\n}",
+        "options": {}
+      },
+      "id": "e3c4d5e6-f7a8-9b0c-1d2e-3f4a5b6c7d8e",
+      "name": "Update CRM Application",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Parse via Local LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Parse via Local LLM": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateId": "jobpilot-job-parser"
+  }
+}

@@ -1,0 +1,64 @@
+# ============================================================
+# JobPilot — Git Ignore
+# ============================================================
+
+# ---------- Environment & Secrets ----------
+.env
+.env.local
+.env.production
+*.pem
+*.key
+*.crt
+infrastructure/nginx/ssl/
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# ---------- Node.js ----------
+node_modules/
+.next/
+out/
+.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ---------- Docker ----------
+docker-compose.override.yml
+
+# ---------- IDE ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ---------- Uploads & Data ----------
+uploads/
+*.sqlite3
+
+# ---------- Logs ----------
+logs/
+*.log
+
+# ---------- OS ----------
+.DS_Store
+Desktop.ini

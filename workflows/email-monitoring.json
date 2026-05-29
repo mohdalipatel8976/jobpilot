@@ -1,0 +1,137 @@
+{
+  "name": "JobPilot - Gmail Monitoring & AI Classification",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "value": 5
+            }
+          ]
+        }
+      },
+      "id": "e4f8d2b1-1234-4567-89ab-cdef01234567",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 10,
+        "simple": false,
+        "filters": {
+          "q": "subject:(interview OR application OR rejection OR offer OR assessment OR update)"
+        }
+      },
+      "id": "f5e9c3b2-2345-5678-90ab-cdef01234568",
+      "name": "Fetch Recruiter Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-oauth-credentials",
+          "name": "Gmail OAuth2 Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/ai/classify-email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer 535a48497f21e13c1cfe5e4585d17d3b"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"subject\": \"{{ $json.subject }}\",\n  \"body\": \"{{ $json.textPlain || $json.textHtml }}\",\n  \"from_address\": \"{{ $json.from.value[0].address }}\"\n}",
+        "options": {}
+      },
+      "id": "a6d8c2b3-3456-6789-01ab-cdef01234569",
+      "name": "AI Classify via Local LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://backend:8000/api/v1/webhooks/n8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 535a48497f21e13c1cfe5e4585d17d3b"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"event\": \"email_classified\",\n  \"gmail_message_id\": \"{{ $('Fetch Recruiter Emails').item.json.id }}\",\n  \"subject\": \"{{ $('Fetch Recruiter Emails').item.json.subject }}\",\n  \"from_address\": \"{{ $('Fetch Recruiter Emails').item.json.from.value[0].address }}\",\n  \"classification\": \"{{ $json.data.classification }}\",\n  \"ai_parsed_data\": {{ JSON.stringify($json.data) }},\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "b7e9d3c4-4567-7890-12ab-cdef01234570",
+      "name": "Callback to FastAPI CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recruiter Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recruiter Emails": {
+      "main": [
+        [
+          {
+            "node": "AI Classify via Local LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Classify via Local LLM": {
+      "main": [
+        [
+          {
+            "node": "Callback to FastAPI CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateId": "jobpilot-gmail-monitor"
+  }
+}

@@ -1,0 +1,66 @@
+# ============================================================
+# JobPilot — Docker Compose Production Overrides
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# ============================================================
+
+services:
+
+  redis:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  backend:
+    build:
+      target: production
+    restart: always
+    volumes: []
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  frontend:
+    build:
+      target: production
+    restart: always
+    volumes: []
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  n8n:
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # Ollama removed in production overrides (using Gemini)
+
+  nginx:
+    restart: always
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/conf.d/production.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./infrastructure/nginx/ssl:/etc/nginx/ssl:ro
+
+  prometheus:
+    restart: always
+
+  grafana:
+    restart: always

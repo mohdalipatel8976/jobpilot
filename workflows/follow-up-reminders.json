@@ -1,0 +1,94 @@
+{
+  "name": "JobPilot - Daily Follow-Up Reminders",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "value": 1
+            }
+          ]
+        }
+      },
+      "id": "c3c3c3c3-4444-5555-6666-777777777777",
+      "name": "Daily Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://backend:8000/api/v1/follow-ups/due",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer n8n_secret_token"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d4d4d4d4-5555-6666-7777-888888888888",
+      "name": "Fetch Due Follow-Ups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegram_chat_id }}",
+        "text": "=⏰ *JobPilot Task Alert* ⏰\n\nYou have pending follow-up tasks due today:\n\n- *Task:* {{ $json.notes }}\n- *Due Date:* {{ $json.due_date }}\n\nAction: Send follow-up or mark as complete on your dashboard!",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "e5e5e5e5-6666-7777-8888-999999999999",
+      "name": "Notify Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [700, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot-credentials",
+          "name": "Telegram Bot API Credentials"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Due Follow-Ups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Due Follow-Ups": {
+      "main": [
+        [
+          {
+            "node": "Notify Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateId": "jobpilot-daily-followups"
+  }
+}

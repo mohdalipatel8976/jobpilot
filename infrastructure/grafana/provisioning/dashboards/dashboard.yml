@@ -1,0 +1,16 @@
+# ============================================================
+# Grafana — Dashboard Auto-Provisioning
+# ============================================================
+
+apiVersion: 1
+
+providers:
+  - name: "JobPilot Dashboards"
+    orgId: 1
+    folder: "JobPilot"
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false
